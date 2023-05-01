@@ -1,0 +1,13 @@
+Erstellen Sie nun ein Github-Repository gemäß den Anweisungen von letzter Woche... Klicken Sie dieses Mal jedoch nicht auf Add a README file.
+
+Kopieren Sie die https-URL in Ihr Github-Repository, das etwa so aussehen sollte: https://github.com/severin123456/cma-week-3.git
+
+
+Um Ihr (lokales) RStudio-Projekt mit Github zu verbinden, müssen wir unser Github-Repository als unser sogenanntes "Remote"-Repository einrichten. Wir könnten mehrere Remote-Repositories haben, weshalb wir sie benennen müssen, und die Konvention ist, sie origin zu nennen. Um ein Remote mit dem Namen origin zu erstellen, geben Sie den folgenden Befehl in Ihr Shell-Terminal ein:
+
+git remote add origin https://github.com/severin12345/cma-week-3.git
+
+Wenn wir zum ersten Mal einen Push zu diesem entfernten Repository durchführen, müssen wir einen Upstream angeben, damit zukünftige Git-Pushs zum richtigen entfernten Zweig geleitet werden. Dies können wir mit der Option --set-upstream (oder -u) erreichen
+
+git push --set-upstream origin main
+Dieser Befehl gibt eine Reihe von Meldungen aus, die mit der folgenden Anweisung enden: Branch 'main' set up to track remote branch 'main' from 'origin'.. Nun, da der Upstream-Zweig (d. h. der Zweig, der die Verfolgung übernimmt) korrekt eingerichtet ist, können Sie den Push-Vorgang auch über das Git-Fenster in RStudio durchführen (möglicherweise müssen Sie das Git-Fenster zuerst aktualisieren).
