@@ -1,0 +1,2 @@
+Activating Git Version Control for your project is one line of code. In your shell terminal, type the following command (which is what RStudio effectively does automatically when you activate the Create a git repository option while creating your project):
+git init
