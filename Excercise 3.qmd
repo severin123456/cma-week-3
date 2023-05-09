@@ -199,4 +199,98 @@ posmo_filter_long |>
   scale_color_hue()
   coord_fixed()+
   theme(legend.position = "bottom")
+  
+  
+pedest <- read_csv("data/pedestrian.csv")
+
+ggplot(pedest, aes(x = E, y = N, group = TrajID)) +
+  geom_path() +
+  labs(x = "Easting", y = "Northing")
+
+plots <- lapply(unique(pedest$TrajID), function(id){
+  ggplot(pedest[pedest$TrajID == id,], aes(E, N)) +
+    geom_path() +
+    ggtitle(paste("TrajID", id))
+})
+library(cowplot)
+plot_grid(plotlist = plots)
+
+Traj1 <- pedest |> 
+  filter(TrajID==1) |> 
+  as.matrix() 
+Traj2 <- pedest |> 
+  filter(TrajID==2) |> 
+  as.matrix()
+Traj3 <- pedest |> 
+  filter(TrajID==3) |> 
+  as.matrix()
+Traj4 <- pedest |> 
+  filter(TrajID==4) |> 
+  as.matrix()
+Traj5 <- pedest |> 
+  filter(TrajID==5) |> 
+  as.matrix()
+Traj6 <- pedest |> 
+  filter(TrajID==6) |> 
+  as.matrix()
+#Hier sind die Werte nicht numeric
+
+library(SimilarityMeasures)
+help(package = "SimilarityMeasures")
+
+E1 <- as.numeric(pedest$E[pedest$TrajID == 1])
+N1 <- as.numeric(pedest$N[pedest$TrajID == 1])
+E2 <- as.numeric(pedest$E[pedest$TrajID == 2])
+N2 <- as.numeric(pedest$N[pedest$TrajID == 2])
+E3 <- as.numeric(pedest$E[pedest$TrajID == 3])
+N3 <- as.numeric(pedest$N[pedest$TrajID == 3])
+E4 <- as.numeric(pedest$E[pedest$TrajID == 4])
+N4 <- as.numeric(pedest$N[pedest$TrajID == 4])
+E5 <- as.numeric(pedest$E[pedest$TrajID == 5])
+N5 <- as.numeric(pedest$N[pedest$TrajID == 5])
+E6 <- as.numeric(pedest$E[pedest$TrajID == 6])
+N6 <- as.numeric(pedest$N[pedest$TrajID == 6])
+Traj1 = cbind(E1, N1)
+Traj2 = cbind(E2, N2)
+Traj3 = cbind(E3, N3)
+Traj4 = cbind(E4, N4)
+Traj5 = cbind(E5, N5)
+Traj6 = cbind(E6, N6)
+
+EditDist(Traj1, Traj2, pointDistance = 20)
+EditDist(Traj1, Traj3, pointDistance = 20)
+EditDist(Traj1, Traj4, pointDistance = 20)
+EditDist(Traj1, Traj5, pointDistance = 20)
+EditDist(Traj1, Traj6, pointDistance = 20)
+EditDist(Traj1, Traj1, pointDistance = 20)
+#Traj1 und Traj6 sind sich demnach am ähnlichsten
+
+DTW(Traj1, Traj2, pointSpacing=-1)
+DTW(Traj1, Traj3, pointSpacing=-1)
+DTW(Traj1, Traj4, pointSpacing=-1)
+DTW(Traj1, Traj5, pointSpacing=-1)
+DTW(Traj1, Traj6, pointSpacing=-1)
+DTW(Traj1, Traj1, pointSpacing=-1)
+#Wieder 1 und 6
+
+Frechet(Traj1, Traj2, testLeash=-1)
+Frechet(Traj1, Traj3, testLeash=-1)
+Frechet(Traj1, Traj4, testLeash=-1)
+Frechet(Traj1, Traj5, testLeash=-1)
+Frechet(Traj1, Traj6, testLeash=-1)
+Frechet(Traj1, Traj1, testLeash=-1)
+#Traj1 und Traj2
+
+LCSS(Traj1, Traj2, pointSpacing=-1, pointDistance=20, 
+     errorMarg=2, returnTrans=FALSE)
+LCSS(Traj1, Traj3, pointSpacing=-1, pointDistance=20, 
+     errorMarg=2, returnTrans=FALSE)
+LCSS(Traj1, Traj4, pointSpacing=-1, pointDistance=20, 
+     errorMarg=2, returnTrans=FALSE)
+LCSS(Traj1, Traj5, pointSpacing=-1, pointDistance=20, 
+     errorMarg=2, returnTrans=FALSE)
+LCSS(Traj1, Traj6, pointSpacing=-1, pointDistance=20, 
+     errorMarg=2, returnTrans=FALSE)
+LCSS(Traj1, Traj1, pointSpacing=-1, pointDistance=20, 
+     errorMarg=2, returnTrans=FALSE)
 ```
