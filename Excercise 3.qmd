@@ -12,7 +12,7 @@ Ctrl+ Alt + I
 library(tidyverse)
 
 
-wildschwein <- read_csv("Wildschwein_BE_2056.csv")
+wildschwein <- read_csv("data/Wildschwein_BE_2056.csv")
 
 wildschwein$TierName |> unique()
 
@@ -61,6 +61,25 @@ sabi |>
   geom_point(aes(color = static))+
   coord_fixed()
   
+
+```
+
+Posmo Daten Aufgabe
+```{r}
+library(sf)
+posmo <- read_csv("data/posmo_2023-01-01T00_00_00+01_00-2023-05-05T23_59_59+02_00.csv")
+
+posmo <- select(posmo, datetime, lon_x, lat_y)
+
+posmo <- st_as_sf(posmo, coords = c("lon_x","lat_y"), crs = 4326) |>
+  st_transform(2056)
+
+sum(is.na(posmo$lon_x))
+sum(is.na(posmo$lat_y))
+#7 Werte NA
+
+#Löschen von NA Werten in den Koordinaten
+posmo <- posmo |> filter(!is.na(lon_x))
 
 ```
 
