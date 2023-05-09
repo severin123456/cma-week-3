@@ -1,0 +1,66 @@
+---
+title: "Untitled"
+format: html
+---
+
+Titel ##
+## Task 1
+
+Ctrl+ Alt + I 
+```{r}
+
+library(tidyverse)
+
+
+wildschwein <- read_csv("Wildschwein_BE_2056.csv")
+
+wildschwein$TierName |> unique()
+
+as.POSIXct("2015-07-01", tz="UTC")
+
+
+sabi <- wildschwein |> 
+  filter(TierName == "Sabi") |> 
+  filter(DatetimeUTC >= as.POSIXct("2015-07-01", tz="UTC"),
+         DatetimeUTC < as.POSIXct("2015-07-03", tz="UTC")
+)
+
+ggplot(sabi, aes(E,N))+
+  geom_point()+
+  geom_path()+
+  coord_equal()
+
+sabi |> 
+  head(50) |> 
+  ggplot(aes(DatetimeUTC, 1))+
+  geom_point()
+
+sabi <- sabi |> 
+  mutate(
+    n_plus1 = sqrt((lead(E, 1)-E)^2+(lead(N, 1)-N)^2),
+    n_plus2 = sqrt((lead(E, 2)-E)^2+(lead(N, 2)-N)^2),
+    n_minus1 = sqrt((lag(E, 1)-E)^2+(lag(N, 1)-N)^2),
+    n_minus2 = sqrt((lag(E, 2)-E)^2+(lag(N, 2)-N)^2)
+  )
+
+sabi <- sabi |> 
+  rowwise() |> 
+  mutate(
+    stepMean = mean(c(n_minus1, n_minus2, n_plus1, n_plus2))
+  ) |> 
+  ungroup()
+
+ggplot(sabi, aes(stepMean))+
+  geom_histogram(binwidth = 10)+
+  geom_vline(xintercept = mean(sabi$stepMean, na.rm = T))
+
+sabi |> 
+  mutate(static= stepMean < mean(stepMean, na.rm = T)) |> 
+  ggplot(aes(E,N))+
+  geom_path()+
+  geom_point(aes(color = static))+
+  coord_fixed()
+  
+
+```
+
