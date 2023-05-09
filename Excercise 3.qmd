@@ -3,10 +3,10 @@ title: "Untitled"
 format: html
 ---
 
-Titel ##
-## Task 1
+Titel \## \## Task 1
 
-Ctrl+ Alt + I 
+Ctrl+ Alt + I
+
 ```{r}
 
 library(tidyverse)
@@ -65,10 +65,15 @@ sabi |>
 ```
 
 Posmo Daten Aufgabe
+
+![](https://computationalmovementanalysis.github.io/FS23/02_Images/laube_2011.jpg)
+
 ```{r}
 library(sf)
 library(readr)
 library(dplyr)
+library(ggplot2)
+library(tmap)
 posmo <- read_csv("data/posmo_2023-01-01T00_00_00+01_00-2023-05-05T23_59_59+02_00.csv")
 
 posmo <- select(posmo, datetime, lon_x, lat_y)
@@ -90,10 +95,108 @@ head(posmo)
 posmo_coordinates <- st_coordinates(posmo)
 posmo <- cbind(posmo, posmo_coordinates)
 
+#Einzelnen Tag extrahieren
 posmo_filter <- posmo |>
     filter(as.Date(datetime) == "2023-03-26")
 
+#Plot mit Pfad
+ggplot(posmo_filter, aes(X,Y))+
+  geom_path()+
+  coord_equal()
 
+#Es gibt eine Lücke in der Datenerhebung...Also keine kontinuierlichen Daten?
+posmo_filter |> 
+  head(50) |> 
+  ggplot(aes(datetime, 1))+
+  geom_point()
 
+#Temporal Window Im datensatz werden etwa alle 10 sec Daten erhoben. Im Wildschwein Datensatz alle 15 min...mit dem unten abgebildeten Code würde das Temporal Window also statt 60min(Wildschewein) etwa 40 sec lang sein.
+#pos[n-2] to pos[n]
+#pos[n-1] to pos[n]
+#pos[n] to pos[n+1]
+#pos[n] to pos[n+2]
+#Das ist Schritt a im Bild aus Laube and Purves (2011)(siehe visual)
+
+#Also kann man die Euklidischen Distanzen der Punkte im temporal Window folgendermassen berechnen.
+posmo_filter <- posmo_filter |> 
+  mutate(
+    n_plus1 = sqrt((lead(X, 1)-X)^2+(lead(Y, 1)-Y)^2),
+    n_plus2 = sqrt((lead(X, 2)-X)^2+(lead(Y, 2)-Y)^2),
+    n_minus1 = sqrt((lag(X, 1)-X)^2+(lag(Y, 1)-Y)^2),
+    n_minus2 = sqrt((lag(X, 2)-X)^2+(lag(Y, 2)-Y)^2)
+  )
+#Das war schritt b
+
+#Die Mittelwerte der neuen Spalten Reihenweise als neue Spalte berechnen. rowwise()  um diese Gruppierung wieder zu beenden -> ungroup()
+posmo_filter <- posmo_filter |> 
+  rowwise() |> 
+  mutate(
+    stepMean = mean(c(n_minus1, n_minus2, n_plus1, n_plus2))
+  ) |> 
+  ungroup()
+
+#Histogram um "statische Punkte" ausfindig zu machen, geom_vline ist dabei der treshold unter welchen ich als nicht bewegend gelte.
+ggplot(posmo_filter, aes(stepMean))+
+  geom_histogram(binwidth = 10)+
+  geom_vline(xintercept = mean(posmo_filter$stepMean, na.rm = T))
+
+#Entfernen der static Points
+posmo_filter <- posmo_filter |> 
+  ungroup() |> 
+  mutate(static = stepMean < mean(stepMean, na.rm = T))
+
+#Die Werte FALSE in der Spalte static behalten, TRUE entfernen.
+posmo_filter_move <- posmo_filter |> 
+  filter(!static)
+
+posmo_filter |> 
+  ggplot(aes(X,Y))+
+  geom_path()+
+  geom_point(aes(color=static))+
+  coord_fixed()+
+  theme(legend.position = "bottom")
+
+posmo_filter_move |> 
+  ggplot(aes(X,Y))+
+  geom_path()+
+  geom_point()+
+  coord_fixed()+
+  theme(legend.position = "bottom")
+
+#Nun muss für alle Segmente eine einzigartige ID erstellt werden. Diese kann als grouping Variable verwendet werden.
+rle_id <- function(vec) {
+    x <- rle(vec)$lengths
+    as.factor(rep(seq_along(x), times = x))
+}
+
+posmo_filter <- posmo_filter |>
+    mutate(segment_id = rle_id(static))
+
+head(posmo_filter)
+
+posmo_filter |> 
+  ggplot(aes(X,Y))+
+  geom_path(aes(color=segment_id))+
+  geom_point(aes(color= segment_id))+
+  scale_color_hue()
+  coord_fixed()+
+  theme(legend.position = "bottom")
+
+#Filtern der Segmente mit mehr als 5 min
+posmo_filter_long <- posmo_filter %>%
+  arrange(segment_id, datetime) %>%
+  mutate(time_diff = difftime(datetime, lag(datetime), units = "mins"),
+         time_diff = ifelse(is.na(time_diff), 0, time_diff)) %>%
+  group_by(segment_id) %>%
+  mutate(cumulative_time = cumsum(time_diff)) %>%
+  filter(cumulative_time > 5) %>%
+  ungroup()
+
+posmo_filter_long |> 
+  ggplot(aes(X,Y))+
+  geom_path(aes(color=segment_id))+
+  geom_point(aes(color= segment_id))+
+  scale_color_hue()
+  coord_fixed()+
+  theme(legend.position = "bottom")
 ```
-
